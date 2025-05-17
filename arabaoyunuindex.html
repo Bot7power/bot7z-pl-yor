@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Araba Oyunu - Bot 7</title>
+    <style>
+        body {
+            margin: 0;
+            background: #eef;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+            background: #a0d8f0;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="800" height="300"></canvas>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+
+        // Oyun alanı ölçüleri
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+
+        // Araba objesi
+        const araba = {
+            x: 100,
+            y: HEIGHT - 60, // yerden 60 px yukarı
+            width: 80,
+            height: 40,
+            velocityY: 0,
+            gravity: 0.8,
+            jumpForce: -15,
+            onGround: true,
+        };
+
+        // Zemin yüksekliği
+        const groundY = HEIGHT - 20;
+
+        // Binalar (engeller)
+        const buildings = [];
+        const buildingWidth = 30;
+        const buildingGap = 200; // binalar arasındaki mesafe
+
+        // Oyun hızı
+        let gameSpeed = 6;
+
+        // Bina yaratma fonksiyonu
+        function createBuilding(x) {
+            const height = Math.random() * 100 + 50; // 50-150 px arası yükseklik
+            buildings.push({ x: x, y: groundY - height, width: buildingWidth, height: height });
+        }
+
+        // İlk binaları ekle
+        for (let i = 0; i < 5; i++) {
+            createBuilding(WIDTH + i * buildingGap);
+        }
+
+        // Araba zıplama fonksiyonu
+        function jump() {
+            if (araba.onGround) {
+                araba.velocityY = araba.jumpForce;
+                araba.onGround = false;
+            }
+        }
+
+        // Kullanıcı girişleri
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                jump();
+            }
+        });
+
+        window.addEventListener('touchstart', e => {
+            jump();
+        });
+
+        window.addEventListener('mousedown', e => {
+            jump();
+        });
+
+        // Oyun döngüsü
+        function gameLoop() {
+            // Arka planı temizle
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+            // Zemin çizimi
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(0, groundY, WIDTH, HEIGHT - groundY);
+
+            // Binaları hareket ettir ve çiz
+            ctx.fillStyle = '#444';
+            for (let i = 0; i < buildings.length; i++) {
+                buildings[i].x -= gameSpeed;
+
+                if (buildings[i].x + buildingWidth < 0) {
+                    buildings.splice(i, 1);
+                    i--;
+                    createBuilding(WIDTH + buildingGap);
+                } else {
+                    ctx.fillRect(buildings[i].x, buildings[i].y, buildings[i].width, buildings[i].height);
+                }
+            }
+
+            // Araba hareketi (yerçekimi)
+            araba.velocityY += araba.gravity;
+            araba.y += araba.velocityY;
+
+            // Zemin kontrolü
+            if (araba.y + araba.height >= groundY) {
+                araba.y = groundY - araba.height;
+                araba.velocityY = 0;
+                araba.onGround = true;
+            }
+
+            // Araba çizimi (dikdörtgen)
+            ctx.fillStyle = '#0077cc';
+            ctx.fillRect(araba.x, araba.y, araba.width, araba.height);
+
+            // Arabanın üzerinde "Bot 7" yazısı
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Bot 7', araba.x + araba.width / 2, araba.y + araba.height / 2 + 7);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
+
